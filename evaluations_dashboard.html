@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>Evaluation Dashboard — MPOnline Hackathon 2026</title>
   <!-- Chart.js for data visualization with safe graceful offline fallback -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -37,6 +37,11 @@
       --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
       --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
       --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
     }
 
     [data-theme="light"] {
@@ -65,9 +70,16 @@
       background-color: var(--bg-primary);
       color: var(--text-main);
       min-height: 100vh;
+      min-height: 100dvh;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+    }
+
+    /* Prevent body scrolling when any modal/dialog is open */
+    body.modal-open {
+      overflow: hidden !important;
+      touch-action: none;
     }
 
     /* Background aesthetic gradient */
@@ -89,6 +101,10 @@
       max-width: 1480px;
       margin: 0 auto;
       padding: 24px 32px 64px;
+      padding-top: max(24px, env(safe-area-inset-top));
+      padding-bottom: max(64px, env(safe-area-inset-bottom));
+      padding-left: max(32px, env(safe-area-inset-left));
+      padding-right: max(32px, env(safe-area-inset-right));
     }
 
     /* Header Bar */
@@ -728,6 +744,7 @@
       width: 100%;
       max-width: 860px;
       height: 100vh;
+      height: 100dvh;
       background: var(--bg-surface);
       border-left: 1px solid var(--border-strong);
       box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
@@ -742,18 +759,81 @@
       transform: translateX(0);
     }
 
+    /* Mobile Top Drag Handle & Quick Actions Bar */
+    .drawer-mobile-handle-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 8px;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      touch-action: pan-y;
+      flex-shrink: 0;
+    }
+
+    .drawer-mobile-handle {
+      width: 44px;
+      height: 5px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.28);
+      margin: 0 auto;
+    }
+
+    [data-theme="light"] .drawer-mobile-handle {
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .drawer-mobile-back-btn,
+    .drawer-mobile-quick-close {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      min-height: 38px;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .drawer-mobile-back-btn:hover,
+    .drawer-mobile-quick-close:hover {
+      color: var(--text-main);
+      background: var(--bg-surface);
+      border-color: var(--border-strong);
+    }
+
+    .drawer-mobile-quick-close {
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .drawer-mobile-quick-close:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #ffffff;
+    }
+
     .drawer-header {
-      padding: 20px 28px;
+      padding: 18px 24px;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 16px;
       background: var(--bg-surface-elevated);
+      flex-shrink: 0;
     }
 
     .drawer-title-group h2 {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 700;
       color: var(--text-main);
       display: flex;
@@ -765,6 +845,13 @@
       font-size: 13px;
       color: var(--text-muted);
       margin-top: 4px;
+    }
+
+    .drawer-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
     }
 
     .drawer-score-hero {
@@ -785,21 +872,50 @@
       margin-top: 2px;
     }
 
+    /* Universal Touch-Friendly Close Button */
     .btn-close {
-      background: transparent;
-      border: none;
-      color: var(--text-dim);
-      font-size: 24px;
+      min-width: 44px;
+      min-height: 44px;
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: var(--text-main);
+      font-size: 22px;
       cursor: pointer;
-      padding: 4px;
+      padding: 0;
       line-height: 1;
-      border-radius: 4px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: var(--transition);
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .btn-close:hover {
+      color: #ffffff;
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05);
+    }
+
+    .btn-close:active {
+      transform: scale(0.92);
+    }
+
+    [data-theme="light"] .btn-close {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.12);
       color: var(--text-main);
-      background: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="light"] .btn-close:hover {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
     }
 
     /* Drawer Tabs */
@@ -809,6 +925,7 @@
       background: var(--bg-surface);
       overflow-x: auto;
       padding: 0 20px;
+      flex-shrink: 0;
     }
 
     .drawer-tab {
@@ -820,6 +937,7 @@
       cursor: pointer;
       white-space: nowrap;
       transition: var(--transition);
+      touch-action: manipulation;
     }
 
     .drawer-tab:hover {
@@ -829,6 +947,71 @@
     .drawer-tab.active {
       color: var(--accent-blue);
       border-bottom-color: var(--accent-blue);
+    }
+
+    /* Mobile Sticky Bottom Action Bar */
+    .drawer-mobile-bottom-bar {
+      display: none;
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background: var(--bg-surface-elevated);
+      border-top: 1px solid var(--border-strong);
+      padding: 10px 16px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+      z-index: 50;
+      gap: 10px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .drawer-bottom-close-btn {
+      flex: 1;
+      min-height: 44px;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(239, 68, 68, 0.15) !important;
+      color: #f87171 !important;
+      border: 1px solid rgba(239, 68, 68, 0.35) !important;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .drawer-bottom-close-btn:active {
+      background: rgba(239, 68, 68, 0.25) !important;
+      transform: scale(0.98);
+    }
+
+    .drawer-bottom-copy-btn {
+      flex: 1;
+      min-height: 44px;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 16px;
+      border-radius: var(--radius-sm);
     }
 
     .drawer-content {
@@ -1018,6 +1201,7 @@
       width: 96vw;
       max-width: 1400px;
       height: 92vh;
+      height: 92dvh;
       background: var(--bg-surface);
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-lg);
@@ -1042,6 +1226,7 @@
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
+      flex-shrink: 0;
     }
 
     .doc-viewer-title-wrap {
@@ -1063,6 +1248,10 @@
       border-radius: var(--radius-md);
       border: 1px solid rgba(59, 130, 246, 0.25);
       flex-shrink: 0;
+    }
+
+    .doc-viewer-top-close {
+      margin-left: auto;
     }
 
     .doc-viewer-controls {
@@ -1092,6 +1281,35 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    /* Mobile thumb-reachable bottom bar for document viewer */
+    .doc-viewer-mobile-bottom-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 14px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      background: var(--bg-surface-elevated);
+      border-top: 1px solid var(--border-strong);
+      z-index: 30;
+      flex-shrink: 0;
+    }
+
+    .doc-viewer-mobile-close-btn {
+      min-height: 42px;
+      padding: 8px 16px;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: #f87171 !important;
+      border: 1px solid rgba(239, 68, 68, 0.4) !important;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
     }
 
     .doc-viewer-body {
@@ -1493,10 +1711,310 @@
       .teams-grid { display: none !important; }
     }
 
+    /* Comprehensive Mobile Responsiveness */
     @media (max-width: 768px) {
-      .app-container { padding: 16px; }
-      .modal-drawer { max-width: 100vw; }
-      .analytics-panel { grid-template-columns: 1fr; }
+      .app-container {
+        padding: 14px 12px 48px;
+        padding-top: max(14px, env(safe-area-inset-top));
+        padding-bottom: max(48px, env(safe-area-inset-bottom));
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+      }
+
+      /* Header Bar */
+      header.header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+      }
+
+      .brand-group {
+        width: 100%;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        border-radius: var(--radius-sm);
+        flex-shrink: 0;
+      }
+
+      .brand-title h1 {
+        font-size: 16px;
+        line-height: 1.35;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .brand-title p {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .header-actions .btn {
+        font-size: 12px;
+        padding: 7px 12px;
+      }
+
+      /* Top KPI Ribbon */
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .kpi-card {
+        padding: 12px 14px;
+      }
+
+      .kpi-label {
+        font-size: 10.5px;
+        margin-bottom: 4px;
+      }
+
+      .kpi-value {
+        font-size: 22px;
+      }
+
+      .kpi-subtext {
+        font-size: 11px;
+      }
+
+      /* Toolbar */
+      .dashboard-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .search-box {
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .search-box input {
+        font-size: 14px;
+        padding: 10px 14px 10px 38px;
+      }
+
+      .view-toggles {
+        width: 100%;
+        display: flex;
+      }
+
+      .view-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      /* Filter Ribbon */
+      .filter-ribbon {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+        margin-bottom: 16px;
+        scrollbar-width: none;
+      }
+
+      .filter-ribbon::-webkit-scrollbar {
+        display: none;
+      }
+
+      .filter-chip {
+        flex-shrink: 0;
+        white-space: nowrap;
+        font-size: 11.5px;
+        padding: 6px 12px;
+      }
+
+      /* Teams Grid (1 column on mobile to prevent overflow) */
+      .teams-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .team-card {
+        padding: 16px;
+      }
+
+      .team-name {
+        font-size: 15.5px;
+      }
+
+      /* Analytics Panel */
+      .analytics-panel {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .chart-card {
+        padding: 16px;
+      }
+
+      .chart-container {
+        height: 240px;
+      }
+
+      /* Deep Dive Modal / Drawer on Mobile */
+      .modal-overlay {
+        background: rgba(0, 0, 0, 0.85);
+      }
+
+      .modal-drawer {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        border-left: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .drawer-mobile-handle-bar {
+        display: flex;
+      }
+
+      .drawer-header {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .drawer-title-group h2 {
+        font-size: 16.5px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .drawer-header-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 8px;
+        border-top: 1px dashed var(--border-subtle);
+        width: 100%;
+      }
+
+      .drawer-score-hero {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        text-align: left;
+      }
+
+      .drawer-score-num {
+        font-size: 24px;
+      }
+
+      .drawer-tabs {
+        padding: 0 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .drawer-tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .drawer-tab {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .drawer-content {
+        padding: 14px 14px 85px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .drawer-mobile-bottom-bar {
+        display: flex;
+      }
+
+      /* Document Viewer Modal on Mobile */
+      .doc-viewer-overlay {
+        padding: 0 !important;
+      }
+
+      .doc-viewer-container {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        border-radius: 0 !important;
+        border: none !important;
+      }
+
+      .doc-viewer-header {
+        padding: 10px 14px;
+        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .doc-viewer-title-wrap {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .doc-viewer-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .doc-viewer-select {
+        flex: 1;
+        max-width: none;
+      }
+
+      .doc-viewer-actions {
+        display: none;
+      }
+
+      .doc-viewer-mobile-bottom-bar {
+        display: flex;
+      }
+
+      /* Sync Modal on Mobile */
+      .sync-modal-card {
+        width: 95% !important;
+        max-width: 100% !important;
+        padding: 18px 16px !important;
+        max-height: 88dvh !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .brand-title h1 {
+        font-size: 15px;
+      }
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .kpi-value {
+        font-size: 20px;
+      }
+      .orig-hero-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -1874,6 +2392,25 @@
   <!-- Deep Dive Drawer / Modal -->
   <div class="modal-overlay" id="detailModal">
     <div class="modal-drawer">
+      <!-- Mobile Top Drag Handle & Nav Bar -->
+      <div class="drawer-mobile-handle-bar" id="drawerMobileHandleBar">
+        <button class="drawer-mobile-back-btn" id="drawerMobileBackBtn" type="button" aria-label="Back to dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back</span>
+        </button>
+        <div class="drawer-mobile-handle" title="Swipe down to close"></div>
+        <button class="drawer-mobile-quick-close" id="drawerMobileQuickCloseBtn" type="button" aria-label="Close evaluation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Close</span>
+        </button>
+      </div>
+
       <div class="drawer-header">
         <div class="drawer-title-group">
           <h2>
@@ -1881,14 +2418,19 @@
             <span id="modalTeamName">Team Name</span>
           </h2>
           <p id="modalCollege">Institution</p>
-          <div style="display: flex; gap: 8px; margin-top: 8px;" id="modalBadges"></div>
+          <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;" id="modalBadges"></div>
         </div>
-        <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="drawer-header-actions">
           <div class="drawer-score-hero">
             <div class="drawer-score-num" id="modalTotalScore">0.0</div>
             <div class="drawer-score-meta" id="modalScoreMeta">Rank #0 Overall</div>
           </div>
-          <button class="btn-close" id="modalCloseBtn" title="Close (Esc)">&times;</button>
+          <button class="btn-close" id="modalCloseBtn" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -2050,18 +2592,20 @@
             <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px;">
               Direct from <code>jury_scoring_sheet.xlsx</code> (SUMMARY sheet). Final Score = Average of Jurors' Presentation Scores (max 80) + Mr. Deven Goratela's Technical Score (T3+T4, max 20).
             </p>
-            <table class="criteria-table" style="margin-bottom: 16px;">
-              <thead>
-                <tr>
-                  <th>Juror / Evaluator</th>
-                  <th>Role</th>
-                  <th>Excel Sheet</th>
-                  <th style="text-align: center;">Pres. Score (Max 80)</th>
-                  <th style="text-align: center;">Tech Score (Max 20)</th>
-                </tr>
-              </thead>
-              <tbody id="modalJuryScoresBody"></tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="criteria-table">
+                <thead>
+                  <tr>
+                    <th>Juror / Evaluator</th>
+                    <th>Role</th>
+                    <th>Excel Sheet</th>
+                    <th style="text-align: center;">Pres. Score (Max 80)</th>
+                    <th style="text-align: center;">Tech Score (Max 20)</th>
+                  </tr>
+                </thead>
+                <tbody id="modalJuryScoresBody"></tbody>
+              </table>
+            </div>
             <div id="modalAllJuryNotesWrap" style="margin-bottom: 24px; display: none;">
               <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-main);">Combined Jury Notes</h5>
               <div id="modalAllJuryNotes" style="font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); max-height: 220px; overflow-y: auto;"></div>
@@ -2084,19 +2628,21 @@
             </div>
 
             <h4>Lead Evaluator Criteria Breakdown & Rationale</h4>
-            <table class="criteria-table">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Criterion</th>
-                  <th>Weight</th>
-                  <th>Score</th>
-                  <th>Points</th>
-                  <th>Evaluator's Basis / Rationale</th>
-                </tr>
-              </thead>
-              <tbody id="modalCriteriaTableBody"></tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="criteria-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Criterion</th>
+                    <th>Weight</th>
+                    <th>Score</th>
+                    <th>Points</th>
+                    <th>Evaluator's Basis / Rationale</th>
+                  </tr>
+                </thead>
+                <tbody id="modalCriteriaTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -2135,31 +2681,35 @@
 
           <div class="drawer-section">
             <h4>Document Submission Audit</h4>
-            <table class="criteria-table">
-              <thead>
-                <tr>
-                  <th>Document / Topic</th>
-                  <th>Read Mode</th>
-                  <th>Size</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="modalFilesTableBody"></tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="criteria-table">
+                <thead>
+                  <tr>
+                    <th>Document / Topic</th>
+                    <th>Read Mode</th>
+                    <th>Size</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="modalFilesTableBody"></tbody>
+              </table>
+            </div>
           </div>
 
           <div class="drawer-section">
             <h4>Qualification Checks</h4>
-            <table class="criteria-table">
-              <thead>
-                <tr>
-                  <th>Check</th>
-                  <th>Result</th>
-                  <th>Detail</th>
-                </tr>
-              </thead>
-              <tbody id="modalChecksTableBody"></tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="criteria-table">
+                <thead>
+                  <tr>
+                    <th>Check</th>
+                    <th>Result</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody id="modalChecksTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -2196,6 +2746,24 @@
           </div>
         </div>
       </div>
+
+      <!-- Mobile Thumb-Reachable Sticky Bottom Action Bar -->
+      <div class="drawer-mobile-bottom-bar" id="drawerMobileBottomBar">
+        <button class="btn btn-secondary drawer-bottom-close-btn" id="modalBottomCloseBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Close Evaluation</span>
+        </button>
+        <button class="btn btn-primary drawer-bottom-copy-btn" id="modalBottomCopyRemarkBtn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span>Copy Remark</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2205,14 +2773,21 @@
       <div class="doc-viewer-header">
         <div class="doc-viewer-title-wrap">
           <div class="doc-viewer-icon">📄</div>
-          <div style="min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+          <div style="min-width: 0; flex: 1;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap;">
               <span class="tag-pill tag-tech" id="docViewerTeamBadge">#T-000</span>
               <strong id="docViewerTitle" style="font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Document Preview</strong>
               <span class="tag-pill tag-docs-ok" id="docViewerSizeBadge" style="font-size: 11px;">0 KB</span>
             </div>
             <div id="docViewerFilename" style="font-size: 11px; font-family: ui-monospace, monospace; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">filename.pdf</div>
           </div>
+          <!-- Desktop & Mobile top-right close button: always pinned -->
+          <button class="btn-close doc-viewer-top-close" id="docViewerCloseBtn" title="Close viewer (Escape)" aria-label="Close document viewer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
 
         <div class="doc-viewer-controls">
@@ -2228,7 +2803,6 @@
           <a class="btn btn-secondary btn-sm" id="docViewerDownloadBtn" href="#" download title="Download file">
             <span>⬇</span> Download
           </a>
-          <button class="btn btn-secondary btn-sm" id="docViewerCloseBtn" title="Close viewer (Escape)" style="font-weight: 700; padding: 6px 12px;">✕</button>
         </div>
       </div>
 
@@ -2240,24 +2814,40 @@
           <p style="color: var(--text-muted); max-width: 500px; margin-bottom: 20px;">
             If the embedded viewer is blocked by browser local security settings, open or download it directly:
           </p>
-          <div style="display: flex; gap: 12px; justify-content: center;">
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
             <a class="btn btn-primary" id="docViewerFallbackOpenBtn" href="#" target="_blank">↗ Open in Browser Window</a>
             <a class="btn btn-secondary" id="docViewerFallbackDownloadBtn" href="#" download>⬇ Download PDF</a>
           </div>
         </div>
+      </div>
+
+      <!-- Mobile thumb-reachable bottom bar for document viewer -->
+      <div class="doc-viewer-mobile-bottom-bar" id="docViewerMobileBottomBar">
+        <button class="btn btn-secondary btn-sm" id="docViewerMobilePrevBtn" type="button">◀ Prev</button>
+        <button class="btn btn-danger btn-sm doc-viewer-mobile-close-btn" id="docViewerMobileCloseBtn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          Close Viewer
+        </button>
+        <a class="btn btn-secondary btn-sm" id="docViewerMobileNewTabBtn" href="#" target="_blank">↗ Tab</a>
+        <button class="btn btn-secondary btn-sm" id="docViewerMobileNextBtn" type="button">Next ▶</button>
       </div>
     </div>
   </div>
 
   <!-- Sync & Rebuild Modal -->
   <div class="modal-overlay" id="syncModal" style="justify-content: center; align-items: center;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); width: 90%; max-width: 620px; padding: 28px; box-shadow: var(--shadow-soft); position: relative; max-height: 90vh; overflow-y: auto;">
+    <div class="sync-modal-card" style="background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); width: 90%; max-width: 620px; padding: 24px; box-shadow: var(--shadow-soft); position: relative; max-height: 90vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
           Rebuild & Sync Evaluations
         </h3>
-        <button class="btn-close" id="syncModalCloseBtn">&times;</button>
+        <button class="btn-close" id="syncModalCloseBtn" aria-label="Close sync modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -2308,6 +2898,12 @@
             <code>.venv/bin/python build_dashboard.py</code>
             <button class="btn btn-primary" style="position: absolute; right: 8px; top: 6px; padding: 3px 10px; font-size: 11px;" onclick="copyCommandText('.venv/bin/python build_dashboard.py')">Copy</button>
           </div>
+        </div>
+
+        <div style="margin-top: 4px; display: flex; justify-content: flex-end;">
+          <button class="btn btn-secondary" id="syncModalFooterCloseBtn" style="min-height: 42px; padding: 8px 20px; font-weight: 600;">
+            ✕ Close Window
+          </button>
         </div>
       </div>
     </div>
@@ -124159,16 +124755,24 @@
 
       // Sync & Rebuild Modal Controls
       const syncModal = document.getElementById('syncModal');
-      document.getElementById('rebuildTipBtn').addEventListener('click', () => {
-        syncModal.classList.add('open');
-      });
+      function openSyncModal() {
+        if (syncModal) syncModal.classList.add('open');
+        document.body.classList.add('modal-open');
+        try { history.pushState({ modal: 'sync' }, ''); } catch (e) {}
+      }
 
-      document.getElementById('syncModalCloseBtn').addEventListener('click', () => {
-        syncModal.classList.remove('open');
-      });
+      function closeSyncModal() {
+        if (syncModal) syncModal.classList.remove('open');
+        updateBodyModalLock();
+      }
+
+      document.getElementById('rebuildTipBtn').addEventListener('click', openSyncModal);
+      document.getElementById('syncModalCloseBtn').addEventListener('click', closeSyncModal);
+      const syncFooterBtn = document.getElementById('syncModalFooterCloseBtn');
+      if (syncFooterBtn) syncFooterBtn.addEventListener('click', closeSyncModal);
 
       syncModal.addEventListener('click', (e) => {
-        if (e.target.id === 'syncModal') syncModal.classList.remove('open');
+        if (e.target.id === 'syncModal') closeSyncModal();
       });
 
       window.copyCommandText = function(cmd) {
@@ -125231,8 +125835,28 @@
         switchDrawerTab('tabOverview');
 
         // Open modal
-        document.getElementById('detailModal').classList.add('open');
+        openDetailModal();
       };
+
+      function updateBodyModalLock() {
+        const anyOpen = document.querySelector('.modal-overlay.open');
+        if (!anyOpen) {
+          document.body.classList.remove('modal-open');
+        }
+      }
+
+      function openDetailModal() {
+        const modal = document.getElementById('detailModal');
+        if (modal) modal.classList.add('open');
+        document.body.classList.add('modal-open');
+        try { history.pushState({ modal: 'detail' }, ''); } catch (e) {}
+      }
+
+      function closeDetailModal() {
+        const modal = document.getElementById('detailModal');
+        if (modal) modal.classList.remove('open');
+        updateBodyModalLock();
+      }
 
       // Document Viewer Logic
       let currentDocTeam = null;
@@ -125257,7 +125881,10 @@
         }
 
         renderCurrentDoc();
-        document.getElementById('docViewerModal').classList.add('open');
+        const modal = document.getElementById('docViewerModal');
+        if (modal) modal.classList.add('open');
+        document.body.classList.add('modal-open');
+        try { history.pushState({ modal: 'docViewer' }, ''); } catch (e) {}
       }
 
       function renderCurrentDoc() {
@@ -125286,13 +125913,23 @@
         });
 
         // Prev / Next button states
-        document.getElementById('docViewerPrevBtn').disabled = (currentDocIndex <= 0);
-        document.getElementById('docViewerNextBtn').disabled = (currentDocIndex >= docs.length - 1);
+        const prevBtn = document.getElementById('docViewerPrevBtn');
+        const nextBtn = document.getElementById('docViewerNextBtn');
+        if (prevBtn) prevBtn.disabled = (currentDocIndex <= 0);
+        if (nextBtn) nextBtn.disabled = (currentDocIndex >= docs.length - 1);
+
+        const mPrev = document.getElementById('docViewerMobilePrevBtn');
+        const mNext = document.getElementById('docViewerMobileNextBtn');
+        if (mPrev) mPrev.disabled = (currentDocIndex <= 0);
+        if (mNext) mNext.disabled = (currentDocIndex >= docs.length - 1);
 
         // Actions
         document.getElementById('docViewerNewTabBtn').href = doc.path;
         document.getElementById('docViewerDownloadBtn').href = doc.path;
         document.getElementById('docViewerDownloadBtn').setAttribute('download', doc.filename);
+
+        const mTab = document.getElementById('docViewerMobileNewTabBtn');
+        if (mTab) mTab.href = doc.path;
 
         document.getElementById('docViewerFallbackOpenBtn').href = doc.path;
         document.getElementById('docViewerFallbackDownloadBtn').href = doc.path;
@@ -125308,18 +125945,43 @@
         if (modal) modal.classList.remove('open');
         const iframe = document.getElementById('docViewerIframe');
         if (iframe) iframe.src = '';
+        updateBodyModalLock();
       }
 
-      document.getElementById('docViewerCloseBtn').addEventListener('click', closeDocViewer);
+      // Doc Viewer button listeners
+      const docCloseBtn = document.getElementById('docViewerCloseBtn');
+      if (docCloseBtn) docCloseBtn.addEventListener('click', closeDocViewer);
 
-      document.getElementById('docViewerPrevBtn').addEventListener('click', () => {
+      const mDocClose = document.getElementById('docViewerMobileCloseBtn');
+      if (mDocClose) mDocClose.addEventListener('click', closeDocViewer);
+
+      const docPrev = document.getElementById('docViewerPrevBtn');
+      if (docPrev) docPrev.addEventListener('click', () => {
         if (currentDocIndex > 0) {
           currentDocIndex--;
           renderCurrentDoc();
         }
       });
 
-      document.getElementById('docViewerNextBtn').addEventListener('click', () => {
+      const docNext = document.getElementById('docViewerNextBtn');
+      if (docNext) docNext.addEventListener('click', () => {
+        const docs = (currentDocTeam && currentDocTeam.submission_files) || [];
+        if (currentDocIndex < docs.length - 1) {
+          currentDocIndex++;
+          renderCurrentDoc();
+        }
+      });
+
+      const mDocPrev = document.getElementById('docViewerMobilePrevBtn');
+      if (mDocPrev) mDocPrev.addEventListener('click', () => {
+        if (currentDocIndex > 0) {
+          currentDocIndex--;
+          renderCurrentDoc();
+        }
+      });
+
+      const mDocNext = document.getElementById('docViewerMobileNextBtn');
+      if (mDocNext) mDocNext.addEventListener('click', () => {
         const docs = (currentDocTeam && currentDocTeam.submission_files) || [];
         if (currentDocIndex < docs.length - 1) {
           currentDocIndex++;
@@ -125353,14 +126015,128 @@
         });
       });
 
-      // Close modal
-      document.getElementById('modalCloseBtn').addEventListener('click', () => {
-        document.getElementById('detailModal').classList.remove('open');
-      });
+      // Close modal listeners (Desktop & Mobile)
+      const modalClose = document.getElementById('modalCloseBtn');
+      if (modalClose) modalClose.addEventListener('click', closeDetailModal);
+
+      const mBackBtn = document.getElementById('drawerMobileBackBtn');
+      if (mBackBtn) mBackBtn.addEventListener('click', closeDetailModal);
+
+      const mQuickClose = document.getElementById('drawerMobileQuickCloseBtn');
+      if (mQuickClose) mQuickClose.addEventListener('click', closeDetailModal);
+
+      const mBottomClose = document.getElementById('modalBottomCloseBtn');
+      if (mBottomClose) mBottomClose.addEventListener('click', closeDetailModal);
+
+      const mBottomCopy = document.getElementById('modalBottomCopyRemarkBtn');
+      if (mBottomCopy) {
+        mBottomCopy.addEventListener('click', () => {
+          if (state.currentTeam && state.currentTeam.excel_remark) {
+            navigator.clipboard.writeText(state.currentTeam.excel_remark).then(() => {
+              showToast('Copied Excel Remark to clipboard!');
+            });
+          }
+        });
+      }
 
       document.getElementById('detailModal').addEventListener('click', (e) => {
         if (e.target.id === 'detailModal') {
-          document.getElementById('detailModal').classList.remove('open');
+          closeDetailModal();
+        }
+      });
+
+      // Mobile swipe gesture to dismiss drawers
+      function setupTouchSwipe(containerEl, closeFn) {
+        if (!containerEl) return;
+        let startX = 0, startY = 0, currentX = 0, currentY = 0;
+        let isTouching = false;
+        let canSwipe = false;
+        let swipeDir = null;
+
+        containerEl.addEventListener('touchstart', (e) => {
+          if (e.touches.length !== 1) return;
+          const touch = e.touches[0];
+          startX = touch.clientX;
+          startY = touch.clientY;
+          currentX = startX;
+          currentY = startY;
+          isTouching = true;
+          canSwipe = false;
+          swipeDir = null;
+
+          const target = e.target;
+          const isTopBar = target.closest('.drawer-mobile-handle-bar') || target.closest('.drawer-header') || target.closest('.doc-viewer-header');
+          const isLeftEdge = startX < 50;
+          const scrollable = containerEl.querySelector('.drawer-content') || containerEl;
+          const isAtTop = scrollable.scrollTop <= 5;
+
+          if (isTopBar || isLeftEdge || isAtTop) {
+            canSwipe = true;
+          }
+        }, { passive: true });
+
+        containerEl.addEventListener('touchmove', (e) => {
+          if (!isTouching || !canSwipe || e.touches.length !== 1) return;
+          const touch = e.touches[0];
+          currentX = touch.clientX;
+          currentY = touch.clientY;
+          const diffX = currentX - startX;
+          const diffY = currentY - startY;
+
+          if (!swipeDir) {
+            if (diffY > 15 && Math.abs(diffY) > Math.abs(diffX)) {
+              swipeDir = 'down';
+            } else if (diffX > 15 && Math.abs(diffX) > Math.abs(diffY)) {
+              swipeDir = 'right';
+            } else {
+              return;
+            }
+          }
+
+          if (swipeDir === 'down' && diffY > 0) {
+            containerEl.style.transform = `translateY(${Math.min(diffY, 200)}px)`;
+            containerEl.style.transition = 'none';
+          } else if (swipeDir === 'right' && diffX > 0) {
+            containerEl.style.transform = `translateX(${Math.min(diffX, 200)}px)`;
+            containerEl.style.transition = 'none';
+          }
+        }, { passive: true });
+
+        containerEl.addEventListener('touchend', () => {
+          if (!isTouching || !canSwipe) return;
+          const diffX = currentX - startX;
+          const diffY = currentY - startY;
+          containerEl.style.transition = '';
+          containerEl.style.transform = '';
+
+          if ((swipeDir === 'down' && diffY > 70) || (swipeDir === 'right' && diffX > 70)) {
+            closeFn();
+          }
+          isTouching = false;
+          canSwipe = false;
+          swipeDir = null;
+        }, { passive: true });
+      }
+
+      setupTouchSwipe(document.querySelector('.modal-drawer'), closeDetailModal);
+      setupTouchSwipe(document.querySelector('.doc-viewer-container'), closeDocViewer);
+
+      // Browser history popstate (handles Android & iOS hardware back button)
+      window.addEventListener('popstate', () => {
+        const docModal = document.getElementById('docViewerModal');
+        if (docModal && docModal.classList.contains('open')) {
+          closeDocViewer();
+          return;
+        }
+        const detailModal = document.getElementById('detailModal');
+        if (detailModal && detailModal.classList.contains('open')) {
+          closeDetailModal();
+          return;
+        }
+        const syncModalEl = document.getElementById('syncModal');
+        if (syncModalEl && syncModalEl.classList.contains('open')) {
+          closeSyncModal();
+          return;
         }
       });
 
@@ -125386,7 +126162,8 @@
           }
         }
         if (e.key === 'Escape') {
-          document.getElementById('detailModal').classList.remove('open');
+          closeDetailModal();
+          closeSyncModal();
         }
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
           e.preventDefault();
